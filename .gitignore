@@ -1,0 +1,12 @@
+backend/venv/
+backend/.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+build/
