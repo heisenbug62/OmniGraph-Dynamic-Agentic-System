@@ -71,8 +71,8 @@ export function ChatContainer({
             </div>
             <h3 className="text-sm font-semibold text-slate-200">Document Analysis</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Staring at a massive PDF and zero time to read it? Drop it here and
-              we'll dig up the exact answers for you.
+              Query our built-in knowledge base to extract verified answers,
+              page citations, and visual source previews instantly.
             </p>
           </Card>
 

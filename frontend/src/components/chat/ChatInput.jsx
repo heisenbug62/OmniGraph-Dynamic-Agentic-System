@@ -3,15 +3,9 @@ import {
   UserCheck,
   ChevronDown,
   Sparkles,
-  Paperclip,
   Check,
-  FileText,
-  X,
   ArrowUp
 } from 'lucide-react';
-
-import { uploadPDFFile, checkDocStatus } from '../../lib/api';
-import UploadConfirmModal from './UploadConfirmModal';
 
 const PERSONAS = [
   {
@@ -44,16 +38,9 @@ export function ChatInput({
 }) {
   const [input, setInput] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedFileName, setUploadedFileName] = useState(null);
-
-  // Upload Confirmation Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pendingFile, setPendingFile] = useState(null);
 
   const textareaRef = useRef(null);
   const dropdownRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -82,54 +69,6 @@ export function ChatInput({
     }
   }, [input]);
 
-  // Handle file input change
-  const handleFileSelection = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setIsUploading(true);
-      const status = await checkDocStatus();
-
-      if (status && status.doc_count > 0) {
-        setPendingFile(file);
-        setIsModalOpen(true);
-      } else {
-        await executeUpload(file, false);
-      }
-    } catch (err) {
-      console.error('Error checking doc status, proceeding with upload:', err);
-      await executeUpload(file, false);
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  // Perform upload
-  const executeUpload = async (file, replace = false) => {
-    setIsUploading(true);
-
-    try {
-      const res = await uploadPDFFile(file, replace);
-      setUploadedFileName(res.filename || file.name);
-    } catch (err) {
-      console.error('Upload failed:', err);
-      alert('Failed to upload and index PDF document. Please try again.');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  // Handle modal decision
-  const handleModalDecision = async (replace) => {
-    setIsModalOpen(false);
-    if (pendingFile) {
-      await executeUpload(pendingFile, replace);
-      setPendingFile(null);
-    }
-  };
-
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -147,54 +86,16 @@ export function ChatInput({
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 z-20">
-
-      {/* Hidden PDF input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileSelection}
-        accept=".pdf"
-        className="hidden"
-      />
-
       <form
         onSubmit={handleSubmit}
         className="relative bg-slate-900/90 border border-slate-800 focus-within:border-sky-500/50 rounded-2xl shadow-2xl backdrop-blur-md overflow-visible"
       >
-
-        {/* Active Uploaded Document */}
-        {uploadedFileName && (
-          <div className="flex items-center justify-between px-4 py-2 bg-slate-800/80 border-b border-slate-700/60 text-xs text-slate-200">
-            <div className="flex items-center gap-2 truncate">
-              <FileText className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-
-              <span className="truncate font-medium">
-                Active Document:{' '}
-                <strong className="text-sky-300">
-                  {uploadedFileName}
-                </strong>
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setUploadedFileName(null)}
-              className="p-1 rounded-md hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
-              title="Clear active document reference"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
         {/* Persona Selector */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-slate-800/60">
-
           <div
             className="relative"
             ref={dropdownRef}
           >
-
             <button
               type="button"
               onClick={() =>
@@ -221,7 +122,6 @@ export function ChatInput({
             {/* Persona Dropdown */}
             {isDropdownOpen && (
               <div className="absolute bottom-full mb-2 left-0 w-72 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 p-1.5 space-y-1 backdrop-blur-xl">
-
                 <div className="px-3 py-1.5 border-b border-slate-800/80 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                   Select Active Agent Persona
                 </div>
@@ -263,43 +163,20 @@ export function ChatInput({
                     </button>
                   );
                 })}
-
               </div>
             )}
-
           </div>
-
         </div>
 
         {/* Input Area */}
         <div className="flex items-end gap-2 px-4 py-3">
-
-          {/* Upload PDF */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading || isLoading}
-            title="Upload PDF Document"
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-          >
-            {isUploading ? (
-              <div className="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Paperclip className="w-4 h-4" />
-            )}
-          </button>
-
           {/* Text Input */}
           <textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              uploadedFileName
-                ? `Ask a question about ${uploadedFileName}...`
-                : 'Ask anything or upload a PDF document...'
-            }
+            placeholder="Ask a question..."
             rows={1}
             disabled={isLoading}
             className="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none resize-none min-h-10 max-h-40 py-2"
@@ -327,26 +204,8 @@ export function ChatInput({
               />
             )}
           </button>
-
         </div>
-
       </form>
-
-      {/* Upload Confirmation Modal */}
-      <UploadConfirmModal
-        isOpen={isModalOpen}
-        fileName={pendingFile?.name}
-        onClose={() => {
-          setIsModalOpen(false);
-          setPendingFile(null);
-
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }}
-        onConfirm={handleModalDecision}
-      />
-
     </div>
   );
 }

@@ -2,19 +2,14 @@ import os
 import json
 import asyncio
 from pathlib import Path
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
-import shutil
 from app.schemas import ChatRequest, ChatResponse
 from app.graph.workflow import agent_app
 from app.websocket_manager import ws_manager
 from app.config import settings
-
-# Import services
-from app.services.pdf_processor import pdf_processor
-from app.services.vector_store import vector_store_service
 
 app = FastAPI(
     title="Dynamic Agentic System API",
@@ -37,10 +32,6 @@ if not os.path.exists(screenshots_dir):
     os.makedirs(screenshots_dir, exist_ok=True)
 
 app.mount("/screenshots", StaticFiles(directory=screenshots_dir), name="screenshots")
-
-# Upload Directory setup
-UPLOAD_DIR = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "uploads")))
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # -------------------------------------------------------------------
@@ -273,43 +264,3 @@ async def chat_stream_endpoint(request: ChatRequest):
             "Cache-Control": "no-cache",
         },
     )
-
-# -------------------------------------------------------------------
-# 5. Document Management & Upload Endpoints
-# -------------------------------------------------------------------
-@app.get("/api/doc-status")
-async def check_doc_status():
-    has_docs = vector_store_service.has_existing_documents()
-    return {"has_existing_documents": has_docs}
-
-
-@app.post("/api/upload")
-async def upload_pdf(
-    file: UploadFile = File(...),
-    replace_existing: bool = Form(default=False)
-):
-    try:
-        if not file.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="Only PDF files are supported.")
-
-        file_path = UPLOAD_DIR / file.filename
-
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        if replace_existing:
-            vector_store_service.clear_vectors()
-
-        chunks = pdf_processor.process_pdf(str(file_path))
-        vector_store_service.add_document_chunks(chunks)
-
-        return {
-            "status": "success",
-            "filename": file.filename,
-            "message": f"Successfully indexed '{file.filename}'",
-            "replace_existing": replace_existing,
-            "total_chunks": len(chunks)
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

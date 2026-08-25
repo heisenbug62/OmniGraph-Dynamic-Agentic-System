@@ -1,12 +1,42 @@
+# Python virtual environments
 backend/venv/
+backend/.venv/
+venv/
+.venv/
+
+# Environment variables / secrets
 backend/.env
+.env
+.env.*
+!.env.example
+
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.env
-.env.*
-!.env.example
+
+# Node
 node_modules/
 dist/
 build/
+
+# PDFs
+*.pdf
+
+# Screenshots / images
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application data
+backend/data/

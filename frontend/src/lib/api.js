@@ -59,29 +59,4 @@ export async function streamChatMessage(payload, onChunk, onMetadata, onError) {
     if (onError) onError(err);
   }
 }
-
-export async function checkDocStatus() {
-  const response = await fetch(`${API_BASE_URL}/api/doc-status`);
-  if (!response.ok) {
-    throw new Error('Failed to check document status');
-  }
-  return await response.json();
-}
-
-export async function uploadPDFFile(file, replaceExisting = false) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('replace_existing', replaceExisting);
-
-  const response = await fetch(`${API_BASE_URL}/api/upload`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Upload failed with status: ${response.status}`);
-  }
-
-  return await response.json();
-}
+
