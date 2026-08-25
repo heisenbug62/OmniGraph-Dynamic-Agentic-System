@@ -72,6 +72,6 @@ Open your web browser and navigate to:
 
 Choose an active agent persona from the header dropdown menu (or leave it on **Auto (Smart Router)** for automatic backend intent detection).
 
-Click the paperclip attachment icon to upload a PDF document for RAG-based analysis.
+Put the document in backend/data/pdf and run the ingestion pineline. The document will be stored in the pinecone in for of vectors.
 
 Type your questions, data analysis prompts, or math problems into the chat bar, and watch real-time state execution and graph traces update live on your interface.
