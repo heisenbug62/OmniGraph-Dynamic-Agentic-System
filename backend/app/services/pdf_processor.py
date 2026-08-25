@@ -4,8 +4,13 @@ from typing import List, Dict, Any
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class PDFProcessor:
-    def __init__(self, output_screenshot_dir: str = "data/screenshots"):
-        self.output_dir = output_screenshot_dir
+    def __init__(self, output_screenshot_dir: str = None):
+        if output_screenshot_dir is None:
+            self.output_dir = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "..", "data", "screenshots")
+            )
+        else:
+            self.output_dir = os.path.abspath(output_screenshot_dir)
         os.makedirs(self.output_dir, exist_ok=True)
         
         # 500 characters (~100 words) per chunk gives precise vector matches
@@ -41,7 +46,7 @@ class PDFProcessor:
             # Split page text into granular semantic units
             sub_chunks = self.text_splitter.split_text(text)
             image_filename = f"{os.path.splitext(pdf_filename)[0]}_page_{page_num + 1}.png"
-            image_path = os.path.join(self.output_dir, image_filename)
+            web_screenshot_path = f"/screenshots/{image_filename}"
 
             for sub_idx, chunk_text in enumerate(sub_chunks):
                 extracted_chunks.append({
@@ -51,7 +56,7 @@ class PDFProcessor:
                         "document_title": pdf_filename,
                         "page_number": page_num + 1,
                         "chunk_index": sub_idx + 1,
-                        "screenshot_path": image_path,
+                        "screenshot_path": web_screenshot_path,
                         "total_pages": len(doc)
                     }
                 })
